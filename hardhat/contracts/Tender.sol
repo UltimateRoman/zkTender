@@ -1,9 +1,11 @@
 //SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.6;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 contract Tender is Initializable {
+
+    uint256 public constant DEPOSIT_AMOUNT = 0.1 ether;
 
     struct TenderInfo {
         uint256 biddingDeadline;

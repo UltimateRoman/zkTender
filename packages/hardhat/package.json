@@ -3,16 +3,19 @@
   "version": "1.0.0",
   "description": "Smart contracts and circuits for the zkTender project",
   "scripts": {
+    "accounts": "hardhat accounts",
+    "clean": "hardhat clean",
     "compile:contracts": "hardhat compile",
     "compile:circuits": "bash scripts/compile-circuits.sh",
     "coverage": "hardhat coverage",
     "deploy:contracts": "hardhat run scripts/deploy.ts",
     "generate:proof": "bash scripts/generate-proof.sh",
+    "node": "hardhat node",
     "setup:circom": "bash scripts/setup-circom.sh",
     "test": "hardhat test",
     "version:fix": "ts-node scripts/version-fix.ts"
   },
-  "author": "Team zkTender",
+  "author": "UltimateRoman",
   "license": "MIT",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",

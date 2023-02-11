@@ -1,0 +1,30 @@
+{
+  "name": "zktender",
+  "version": "1.0.0",
+  "description": "Sealed bid tender system using Blockchain and ZKP",
+  "scripts": {
+    "accounts": "npm run accounts -w @zktender/hardhat",
+    "node": "npm run node -w @zktender/hardhat",
+    "clean": "npm run clean -w @zktender/hardhat",
+    "compile:circuits": "npm run compile:circuits -w @zktender/hardhat",
+    "compile:contracts": "npm run compile:contracts -w @zktender/hardhat",
+    "coverage": "npm run coverage -w @zktender/hardhat",
+    "deploy:contracts": "npm run deploy:contracts -w @zktender/hardhat",
+    "generate:proof": "npm run generate:proof -w @zktender/hardhat",
+    "setup:circom": "npm run setup:circom -w @zktender/hardhat",
+    "test": "npm run test -w @zktender/hardhat",
+    "verify": "npm run verify -w @zktender/hardhat",
+    "version:fix": "npm run version:fix -w @zktender/hardhat"
+  },
+  "author": "UltimateRoman",
+  "license": "MIT",
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/hardhat",
+      "**/hardhat/**"
+    ]
+  }
+}

@@ -4,26 +4,30 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 contract Tender is Initializable {
+    uint8 public constant MAX_BIDS = 4;
     uint256 public constant DEPOSIT_AMOUNT = 0.1 ether;
 
     struct TenderInfo {
         uint256 biddingDeadline;
         string title;
         string description;
+        string document;
     }
 
     address owner;
+    address evaluator;
     address winningBidder;
+
     TenderInfo public tenderInfo;
     uint8 public bidderCount;
     uint8 public bidCount;
     address[] public bidders;
+    bytes32[] public bids;
 
-    mapping(address => string) bidderNames;
-    mapping(uint => address) bidderID;
-    mapping(address => uint256) public bidAmount;
+    mapping(address => string) bidderName;
+    mapping(address => bytes32) public sealedBid;
 
-    bool public paymentSettled;
+    bool public biddingEnded;
 
     modifier onlyBefore(uint time) {
         require(block.timestamp < time);
@@ -35,41 +39,46 @@ contract Tender is Initializable {
         _;
     }
 
-    function initialize(TenderInfo calldata _tenderInfo, address _owner) initializer external {
+    function initialize(TenderInfo calldata _tenderInfo, address _owner, address _evaluator) initializer external {
         tenderInfo = _tenderInfo;
         owner = _owner;
+        evaluator = _evaluator;
     }
 
     function registerBidder(string calldata _bidderName) external {
         require(msg.sender != owner, "creator cannot bid");
         bidderCount += 1;
-        bidderNames[msg.sender] = _bidderName;
-        bidderID[bidderCount] = msg.sender;
+        bidderName[msg.sender] = _bidderName;
+        bidders.push(msg.sender);
     }
 
-    function placeBid(uint256 _amount) external payable {
+    function placeBid(bytes32 _sealedBid) external payable {
+        require(bidCount < MAX_BIDS, "max count reached");
         require(msg.value >= 0.1 ether, "security deposit required");
-        bidAmount[msg.sender] = _amount;
+        sealedBid[msg.sender] = _sealedBid;
+        bids.push(_sealedBid);
         bidCount += 1;
     }
 
-    function settleTender() external onlyAfter(tenderInfo.biddingDeadline) {
-        require(!isTenderOpen(), "tender still open");
-        address lowestBidder = bidderID[1];
-        uint256 lowestBid = bidAmount[lowestBidder];
-        for (uint8 i=2; i<=bidderCount; ++i) {
-            if (bidAmount[bidderID[i]] < lowestBid) {
-                lowestBid = bidAmount[bidderID[i]];
-                lowestBidder = bidderID[i];
+    function revealBids(bytes32[] calldata hashedBids, bytes32 lowestBidHash) external onlyAfter(tenderInfo.biddingDeadline) {
+        require(msg.sender == evaluator, "Only evaluator");
+        for (uint8 i = 0; i < bidCount; ++i) {
+            require(bids[i] == hashedBids[i], "Invalid bid amount");
+        }
+        for (uint8 i = 0; i < bidderCount; ++i) {
+            if (sealedBid[bidders[i]] == lowestBidHash) {
+                winningBidder = bidders[i];
             }
         }
-        winningBidder = lowestBidder;
     }
 
-    function settlePayment() external payable {
-        require(msg.sender == winningBidder, "Not tender winner");
-        payable(owner).transfer(bidAmount[winningBidder]);
-        paymentSettled = true;
+    function refundDeposits() external {
+        require(winningBidder != address(0), "Winner not selected");
+        for (uint8 i = 0; i < bidderCount; ++i) {
+            if (bidders[i] != winningBidder) {
+                payable(bidders[i]).transfer(DEPOSIT_AMOUNT);
+            }
+        }
     }
 
     function isTenderOpen() public view returns (bool) {
@@ -80,7 +89,7 @@ contract Tender is Initializable {
         return winningBidder != address(0);
     }
 
-    function winningBidderName() public view returns (string memory) {
-        return bidderNames[winningBidder];
+    function winningBidderName() public view onlyAfter(tenderInfo.biddingDeadline) returns (string memory) {
+        return bidderName[winningBidder];
     }
 }

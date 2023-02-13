@@ -5,11 +5,13 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./Tender.sol";
 
 contract TenderManager {
+    address public evaluator;
     address public baseImplementation;
     address public verifier;
     address[] public tenders;
 
-    constructor(address _verifier) {
+    constructor(address _evaluator, address _verifier) {
+        evaluator = _evaluator;
         verifier = _verifier;
         baseImplementation = address(new Tender());
     }
@@ -18,7 +20,7 @@ contract TenderManager {
 
     function createNewTender(Tender.TenderInfo calldata tenderInfo) external {
         address proxy = Clones.clone(baseImplementation);
-        Tender(proxy).initialize(tenderInfo, msg.sender);
+        Tender(proxy).initialize(tenderInfo, msg.sender, evaluator);
         tenders.push(proxy);
         emit CreatedNewTender(proxy, msg.sender);
     }

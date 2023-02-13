@@ -4,7 +4,7 @@ Sealed-bid tender system using Blockchain and Zero-knowledge proofs (ZKP)
 
 ## Setup
 
-In WSL
+In WSL or Linux installation
 
 $ npm i
 

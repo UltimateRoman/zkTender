@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-abi-exporter";
 import "solidity-coverage";
 
 dotenv.config();
@@ -49,6 +50,18 @@ const config: HardhatUserConfig = {
         accounts
     }
   },
+  typechain: {
+    outDir: "./src/types/typechain",
+    target: "ethers-v5",
+    alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads
+  },
+  abiExporter: {
+    path: "../next-app/abis",
+    runOnCompile: true,
+    clear: true,
+    flat: true,
+    except: ['Initializable']
+  }
 };
 
 export default config;

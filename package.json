@@ -14,7 +14,11 @@
     "setup:circom": "npm run setup:circom -w @zktender/hardhat",
     "test": "npm run test -w @zktender/hardhat",
     "verify": "npm run verify -w @zktender/hardhat",
-    "version:fix": "npm run version:fix -w @zktender/hardhat"
+    "version:fix": "npm run version:fix -w @zktender/hardhat",
+    "dev": "npm run dev -w @zktender/next-app",
+    "build": "npm run build -w @zktender/next-app",
+    "start": "npm run start -w @zktender/next-app",
+    "lint": "npm run lint -w @zktender/next-app"
   },
   "author": "UltimateRoman",
   "license": "MIT",

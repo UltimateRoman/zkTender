@@ -1,5 +1,10 @@
 [
   {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -40,25 +45,12 @@
   },
   {
     "inputs": [],
-    "name": "bidCount",
+    "name": "allBidsRevealed",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "bool",
         "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "bidderCount",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -84,19 +76,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "biddingEnded",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -110,6 +89,32 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "currentStage",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBidValues",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -153,37 +158,16 @@
         "internalType": "address",
         "name": "_evaluator",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_managerContract",
+        "type": "address"
       }
     ],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "isTenderOpen",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "isTenderSettled",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -209,30 +193,12 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "_bidderName",
-        "type": "string"
+        "internalType": "uint256",
+        "name": "_value",
+        "type": "uint256"
       }
     ],
-    "name": "registerBidder",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32[]",
-        "name": "hashedBids",
-        "type": "bytes32[]"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "lowestBidHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "revealBids",
+    "name": "revealBid",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -285,8 +251,26 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "hashedBids",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "lowestBidHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "verifyBids",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
-    "name": "winningBidderName",
+    "name": "winningBidderUsername",
     "outputs": [
       {
         "internalType": "string",

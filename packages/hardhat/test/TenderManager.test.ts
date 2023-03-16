@@ -9,8 +9,13 @@ describe("Tender Manager Test", function () {
   async function deployFixture() {
     const [owner, otherAccount] = await ethers.getSigners();
 
+    const Verifier = await ethers.getContractFactory("Verifier");
+    const verifier = await Verifier.deploy();
+    await verifier.deployed();
+
     const TenderManager = await ethers.getContractFactory("TenderManager");
-    const tenderManager = await TenderManager.deploy();
+    const tenderManager = await TenderManager.deploy(owner.address, verifier.address);
+    await tenderManager.deployed();
 
     return { tenderManager, owner, otherAccount };
   }
@@ -18,7 +23,6 @@ describe("Tender Manager Test", function () {
   describe("Deployment", function () {
     it("Tender Manager smart contract deploys succesfully", async function () {
       const { tenderManager } = await loadFixture(deployFixture);
-
       expect(tenderManager.address).to.not.be.undefined;
     });
   });

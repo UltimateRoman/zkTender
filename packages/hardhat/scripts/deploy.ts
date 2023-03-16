@@ -1,12 +1,13 @@
 import { ethers } from "hardhat";
 
 async function main() {
+  const [deployer] = await ethers.getSigners();
   const Verifier = await ethers.getContractFactory("Verifier");
   const verifier = await Verifier.deploy();
   await verifier.deployed();
 
   const TenderManager = await ethers.getContractFactory("TenderManager");
-  const tenderManager = await TenderManager.deploy(verifier.address);
+  const tenderManager = await TenderManager.deploy(deployer.address, verifier.address);
   await tenderManager.deployed();
 
   console.log(`TenderManager deployed to ${tenderManager.address}`);

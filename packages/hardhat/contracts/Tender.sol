@@ -94,6 +94,14 @@ contract Tender is Initializable {
         }
     }
 
+    function getAllBidders() public view returns (address[] memory) {
+        return bidders;
+    }
+
+    function getAllSealedBids() public view returns (bytes32[] memory) {
+        return bids;
+    }
+
     function currentStage() public view returns (uint8) {
         if (block.timestamp <= tenderInfo.biddingDeadline) {
             return 0;

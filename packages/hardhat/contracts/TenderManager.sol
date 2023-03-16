@@ -1,21 +1,22 @@
 //SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./Tender.sol";
 
-contract TenderManager {
+contract TenderManager is Ownable {
     struct TenderBaseInfo {
         string title;
         address tender;
     }
 
+    TenderBaseInfo[] tenders;
+    mapping(address => string) usernames;
+
     address public evaluator;
     address public verifier;
     address public baseImplementation;
-
-    TenderBaseInfo[] tenders;
-    mapping(address => string) usernames;
 
     constructor(address _evaluator, address _verifier) {
         evaluator = _evaluator;
@@ -25,6 +26,14 @@ contract TenderManager {
 
     event RegisteredUser(address user, string username);
     event CreatedNewTender(address proxy, address beneficiary);
+
+    function setEvaluator(address _evaluator) external onlyOwner {
+        evaluator = _evaluator;
+    }
+
+    function setVerifier(address _verifier) external onlyOwner {
+        verifier = _verifier;
+    }
 
     function registerUser(string calldata username) external {
         require(keccak256(abi.encodePacked(usernames[msg.sender])) == keccak256(abi.encodePacked("")), "Already registered");

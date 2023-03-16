@@ -4,8 +4,8 @@ const Footer = () => {
         <footer className="flex items-center justify-end">
           <div className="py-[30px]">
             <a
-              href="https://github.com/Weir-Protocol/prototype"
-              className="font-bold text-sm"
+              href="https://github.com/UltimateRoman/zkTender"
+              className="font-bold text-lg text-white"
               target="_blank"
               rel="noreferrer"
             >

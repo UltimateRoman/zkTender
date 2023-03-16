@@ -7,12 +7,13 @@ import "./Tender.sol";
 
 contract TenderManager is Ownable {
     struct TenderBaseInfo {
-        string title;
         address tender;
+        string title;
+        string creator;
     }
 
     TenderBaseInfo[] tenders;
-    mapping(address => string) usernames;
+    mapping(address => string) usernameOf;
 
     address public evaluator;
     address public verifier;
@@ -36,15 +37,22 @@ contract TenderManager is Ownable {
     }
 
     function registerUser(string calldata username) external {
-        require(keccak256(abi.encodePacked(usernames[msg.sender])) == keccak256(abi.encodePacked("")), "Already registered");
-        usernames[msg.sender] = username;
+        require(
+            keccak256(abi.encodePacked(usernameOf[msg.sender])) == keccak256(abi.encodePacked("")), 
+            "Already registered"
+        );
+        usernameOf[msg.sender] = username;
         emit RegisteredUser(msg.sender, username);
     }
 
     function createNewTender(Tender.TenderInfo calldata tenderInfo) external {
+        require(
+            keccak256(abi.encodePacked(usernameOf[msg.sender])) != keccak256(abi.encodePacked("")), 
+            "Not registered"
+        );
         address proxy = Clones.clone(baseImplementation);
         Tender(proxy).initialize(tenderInfo, msg.sender, evaluator, address(this));
-        tenders.push(TenderBaseInfo(tenderInfo.title, proxy));
+        tenders.push(TenderBaseInfo(proxy, tenderInfo.title, usernameOf[msg.sender]));
         emit CreatedNewTender(proxy, msg.sender);
     }
 
@@ -53,6 +61,6 @@ contract TenderManager is Ownable {
     }
 
     function getUsername(address user) public view returns (string memory) {
-        return usernames[user];
+        return usernameOf[user];
     }
 }

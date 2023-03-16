@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { useState } from "react";
-import { useToast } from "@chakra-ui/react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const navLinks: { text: string; link: string }[] = [
@@ -15,7 +14,6 @@ const navLinks: { text: string; link: string }[] = [
 ];
 
 const Navbar = () => {
-    const toast = useToast();
     const [navbarVisible, setNavbarVisible] = useState<boolean>(false);
 
     return (
@@ -23,14 +21,16 @@ const Navbar = () => {
             <header className="w-full flex items-center justify-between bg-background py-[15px]">
                 <div className="flex flex-1">
                     <nav className="flex flex-1">
-                        <h1 className="flex-1 lg:flex-auto text-lg mr-[20px] font-bold text-white whitespace-nowrap">
-                            zkTender
-                        </h1>
+                        <Link href="/" key="home">
+                            <h1 className="flex-1 lg:flex-auto text-xl mr-[20px] font-bold text-white whitespace-nowrap">
+                                zkTender
+                            </h1>
+                        </Link>
                         <ul className="hidden flex-[2] lg:flex-auto md:flex w-full items-center">
                             {navLinks.map(({ link, text }) => (
                                 <Link href={link} key={text + link}>
                                     <li className="cursor-pointer">
-                                        <a className="px-[10px]">{text}</a>
+                                        <a className="px-[10px] text-white">{text}</a>
                                     </li>
                                 </Link>
                             ))}
@@ -46,7 +46,7 @@ const Navbar = () => {
                 >
                     <span className="h-[2px] w-[30px] bg-white my-[2px]"></span>
                     <span className="h-[2px] w-[30px] bg-white my-[2px]"></span>
-                    <span className="h-[2px] w-[30px] bg-white my-[2px]"></span>
+                    {/* <span className="h-[2px] w-[30px] bg-white my-[2px]"></span> */}
                 </div>
 
                 <div

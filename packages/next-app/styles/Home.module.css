@@ -29,7 +29,7 @@
 }
 
 .title a {
-  color: #0070f3;
+  color: #fdfdfd;
   text-decoration: none;
 }
 
@@ -40,6 +40,7 @@
 }
 
 .title {
+  color: #fafafa;
   margin: 0;
   line-height: 1.15;
   font-size: 4rem;
@@ -77,7 +78,7 @@
   margin: 1rem;
   padding: 1.5rem;
   text-align: left;
-  color: inherit;
+  color: #fafafa;
   text-decoration: none;
   border: 1px solid #eaeaea;
   border-radius: 10px;

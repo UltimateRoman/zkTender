@@ -140,14 +140,19 @@
       {
         "components": [
           {
+            "internalType": "address",
+            "name": "tender",
+            "type": "address"
+          },
+          {
             "internalType": "string",
             "name": "title",
             "type": "string"
           },
           {
-            "internalType": "address",
-            "name": "tender",
-            "type": "address"
+            "internalType": "string",
+            "name": "creator",
+            "type": "string"
           }
         ],
         "internalType": "struct TenderManager.TenderBaseInfo[]",

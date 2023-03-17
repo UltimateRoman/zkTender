@@ -12,10 +12,11 @@ import {
     FormLabel
 } from "@chakra-ui/react";
 import { 
-    useSigner,
-    useContractWrite, 
-    usePrepareContractWrite
-} from 'wagmi';
+    ethers, 
+    Contract, 
+    Signer
+} from 'ethers';
+import { useSigner } from 'wagmi';
 import { Web3Storage } from 'web3.storage';
 import DatePicker from 'react-datepicker'; 
 import DefaultLayout from "../layouts/DefaultLayout";
@@ -24,70 +25,33 @@ import { TenderManagerAddress } from "../../hardhat/contractAddress";
 
 const Create = () => {
     const toast = useToast();
-    const [hydrated, setHydrated] = useState(false);
     const [loading, setLoading] = useState<boolean>(false);
+    const [contract, setContract] = useState<Contract>();
     const [title, setTitle] = useState<string>("");
     const [description, setDescription] = useState<string>("");
-    const [documentURL, setDocumentURL] = useState<string>("afa");
+    const [documentURL, setDocumentURL] = useState<string>("");
     const [biddingDeadline, setBiddingDeadline] = useState<Date>(new Date());
 
     const { data: signer } = useSigner();
-    // const contract = useContract({
-    //     address: TenderManagerAddress,
-    //     abi: TenderManager,
-    //     signerOrProvider: signer,
-    // });
-
-    const { config } = usePrepareContractWrite({
-        address: TenderManagerAddress,
-        abi: TenderManager,
-        functionName: 'createNewTender',
-        args: [{
-            biddingDeadline: Date.parse(biddingDeadline?.toDateString()),
-            title,
-            description,
-            documentURL
-        }]
-    });
-    const { data, isLoading, isSuccess, write } = useContractWrite({
-        ...config,
-        onSettled() {
-            toast({
-                title: "Created Tender",
-                description: "Successfully created new tender",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-        },
-        onError(error) {
-            toast({
-                title: "Error: transaction failed",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-            console.log(error);
-        }
-    });
 
     useEffect(() => {
-        setHydrated(true);
+        const contract = new ethers.Contract(TenderManagerAddress, TenderManager, signer as Signer);
+        setContract(contract);
     },[]);
 
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         setLoading(true);
-        // const files: FileList | null = e.target.files;
-        // const client = new Web3Storage({ token: process.env.WEB3STORAGE_TOKEN || "" });
-        // const cid = await client.put(files as any);
-        // setDocumentURL(`https://${cid}.ipfs.dweb.link/`);
-        // toast({
-        //     title: "Uploaded file",
-        //     description: "Successfully uploaded file to IPFS",
-        //     status: "success",
-        //     duration: 3000,
-        //     isClosable: true,
-        // });
+        const files: FileList | null = e.target.files;
+        const client = new Web3Storage({ token: process.env.WEB3STORAGE_TOKEN || "" });
+        const cid = await client.put(files as any);
+        setDocumentURL(`https://${cid}.ipfs.dweb.link/`);
+        toast({
+            title: "Uploaded file",
+            description: "Successfully uploaded file to IPFS",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+        });
         setLoading(false);
     }
 
@@ -95,19 +59,25 @@ const Create = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            // const tenderInfo = {
-            //     biddingDeadline: Date.parse(biddingDeadline?.toDateString()) as number,
-            //     title,
-            //     description,
-            //     documentURL
-            // };
-            // const tx = await contract?.createNewTender(tenderInfo);
-            // await tx.wait();
-            write?.();
+            const tenderInfo = [
+                Date.parse(biddingDeadline?.toDateString()),
+                title,
+                description,
+                documentURL
+            ];
+            const tx = await contract?.connect(signer as Signer)?.createNewTender(tenderInfo);
+            await tx?.wait();
+            toast({
+                title: "Created Tender",
+                description: "Successfully created new tender",
+                status: "success",
+                duration: 3000,
+                isClosable: true
+            });
             setLoading(false);
         } catch (e) {
             toast({
-                title: "Error: Please try again",
+                title: "Error: Transaction failed",
                 status: "error",
                 duration: 3000,
                 isClosable: true,

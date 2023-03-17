@@ -1,16 +1,22 @@
 import '../styles/globals.scss';
+import "@rainbow-me/rainbowkit/styles.css";
 import Head from 'next/head';
 import type { AppProps } from 'next/app';
 import { ChakraProvider } from '@chakra-ui/react';
 
-import "@rainbow-me/rainbowkit/styles.css";
+import { 
+  WagmiConfig,
+  createClient,
+  configureChains   
+} from "wagmi";
+import { 
+  localhost,
+  polygonMumbai 
+} from "wagmi/chains";
 import {
   getDefaultWallets,
   RainbowKitProvider
 } from "@rainbow-me/rainbowkit";
-import { polygonMumbai, localhost } from "wagmi/chains";
-import { configureChains, createClient, WagmiConfig } from "wagmi";
-import { alchemyProvider } from "wagmi/providers/alchemy";
 import { publicProvider } from "wagmi/providers/public";
 
 const { provider, chains } = configureChains(

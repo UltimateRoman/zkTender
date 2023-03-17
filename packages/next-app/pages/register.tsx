@@ -1,5 +1,6 @@
 import {
     useState,
+    useEffect,
     FormEventHandler
 } from "react";
 import {
@@ -9,16 +10,28 @@ import {
     FormLabel
 } from "@chakra-ui/react";
 import { 
+    useAccount,
+    useContractRead,
     useContractWrite,
     usePrepareContractWrite 
 } from 'wagmi';
+import { useRouter } from "next/router";
 import DefaultLayout from "../layouts/DefaultLayout";
 import TenderManager from "../abis/TenderManager.json";
 import { TenderManagerAddress } from "../../hardhat/contractAddress";
 
 const Register = () => {
     const toast = useToast();
+    const router = useRouter();
     const [username, setUsername] = useState<string>("");
+
+    const { address, isConnected } = useAccount();
+    const { data, isError: err1 } = useContractRead({
+        address: TenderManagerAddress,
+        abi: TenderManager,
+        functionName: "getUsername",
+        args: [address]
+    });
 
     const { config } = usePrepareContractWrite({
         address: TenderManagerAddress,
@@ -26,7 +39,48 @@ const Register = () => {
         functionName: 'registerUser',
         args: [username]
     });
-    const { isLoading, isSuccess, write, isError } = useContractWrite(config);
+    const { isLoading, write, isError } = useContractWrite({
+        ...config,
+        onSuccess(data) {
+            toast({
+                title: "Registered",
+                description: "Successfully registered username",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            console.log('Success', data);
+        },
+        onError(error) {
+            toast({
+                title: "Error: transaction failed",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            console.log(error);
+        }
+    });
+
+    useEffect(() => {
+        if (!isConnected) {
+            toast({
+                title: "Wallet not connected",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            router.push("/");
+        } else if (data) {
+            toast({
+                title: "Already registered",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            router.push("/");
+        }
+    },[]);
 
     const handleSubmit: FormEventHandler = async (e) => {
         e.preventDefault();
@@ -39,16 +93,7 @@ const Register = () => {
             });
         } else {
             try {
-                write?.()
-                if (isSuccess) {
-                    toast({
-                        title: "Registered User",
-                        description: "Successfully registered new user",
-                        status: "success",
-                        duration: 3000,
-                        isClosable: true,
-                    });
-                } 
+                write?.();
             } catch (e) {
                 if (isError) {
                     toast({
@@ -58,7 +103,7 @@ const Register = () => {
                         isClosable: true,
                     });
                 }
-                console.log("Error: ", isError);
+                console.log("Error: ", e);
             }
         }
     }
@@ -67,7 +112,6 @@ const Register = () => {
         <DefaultLayout>
         <div className="min-h-[70vh] flex justify-center items-center max-w-[500px] w-full mx-auto my-[50px]">
             <form
-                onSubmit={handleSubmit}
                 className="bg-white p-[50px] rounded w-full"
             >
             <h2 className="text-center font-semibold text-2xl mb-[30px]">
@@ -91,6 +135,7 @@ const Register = () => {
                 type="submit"
                 bg="twitter.500"
                 className="mt-[20px] w-full"
+                onClick={handleSubmit}
             >
                 Register
             </Button>

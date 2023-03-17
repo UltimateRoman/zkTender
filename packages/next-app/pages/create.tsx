@@ -1,5 +1,6 @@
 import {
     useState,
+    useEffect,
     ChangeEvent,
     FormEventHandler
 } from "react";
@@ -12,7 +13,8 @@ import {
 } from "@chakra-ui/react";
 import { 
     useSigner,
-    useContract
+    useContractWrite, 
+    usePrepareContractWrite
 } from 'wagmi';
 import { Web3Storage } from 'web3.storage';
 import DatePicker from 'react-datepicker'; 
@@ -22,48 +24,34 @@ import { TenderManagerAddress } from "../../hardhat/contractAddress";
 
 const Create = () => {
     const toast = useToast();
+    const [hydrated, setHydrated] = useState(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [title, setTitle] = useState<string>("");
     const [description, setDescription] = useState<string>("");
-    const [documentURL, setDocumentURL] = useState<string>("");
+    const [documentURL, setDocumentURL] = useState<string>("afa");
     const [biddingDeadline, setBiddingDeadline] = useState<Date>(new Date());
 
-    const { data: signer, isError, isLoading } = useSigner();
-    const contract = useContract({
+    const { data: signer } = useSigner();
+    // const contract = useContract({
+    //     address: TenderManagerAddress,
+    //     abi: TenderManager,
+    //     signerOrProvider: signer,
+    // });
+
+    const { config } = usePrepareContractWrite({
         address: TenderManagerAddress,
         abi: TenderManager,
-        signerOrProvider: signer,
+        functionName: 'createNewTender',
+        args: [{
+            biddingDeadline: Date.parse(biddingDeadline?.toDateString()),
+            title,
+            description,
+            documentURL
+        }]
     });
-
-    const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-        setLoading(true);
-        const files: FileList | null = e.target.files;
-        const client = new Web3Storage({ token: process.env.WEB3STORAGE_TOKEN || "" });
-        const cid = await client.put(files as any);
-        toast({
-            title: "Uploaded file",
-            description: "Successfully uploaded file to IPFS",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-        });
-        setDocumentURL(`https://${cid}.ipfs.dweb.link/`);
-        setLoading(false);
-    }
-
-    const handleSubmit: FormEventHandler = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const tenderInfo = {
-                biddingDeadline: Date.parse(biddingDeadline?.toDateString()) as number,
-                title,
-                description,
-                documentURL
-            };
-            console.log(contract)
-            const tx = await contract?.createNewTender(tenderInfo);
-            await tx.wait();
+    const { data, isLoading, isSuccess, write } = useContractWrite({
+        ...config,
+        onSettled() {
             toast({
                 title: "Created Tender",
                 description: "Successfully created new tender",
@@ -71,6 +59,51 @@ const Create = () => {
                 duration: 3000,
                 isClosable: true,
             });
+        },
+        onError(error) {
+            toast({
+                title: "Error: transaction failed",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            console.log(error);
+        }
+    });
+
+    useEffect(() => {
+        setHydrated(true);
+    },[]);
+
+    const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+        setLoading(true);
+        // const files: FileList | null = e.target.files;
+        // const client = new Web3Storage({ token: process.env.WEB3STORAGE_TOKEN || "" });
+        // const cid = await client.put(files as any);
+        // setDocumentURL(`https://${cid}.ipfs.dweb.link/`);
+        // toast({
+        //     title: "Uploaded file",
+        //     description: "Successfully uploaded file to IPFS",
+        //     status: "success",
+        //     duration: 3000,
+        //     isClosable: true,
+        // });
+        setLoading(false);
+    }
+
+    const handleSubmit: FormEventHandler = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            // const tenderInfo = {
+            //     biddingDeadline: Date.parse(biddingDeadline?.toDateString()) as number,
+            //     title,
+            //     description,
+            //     documentURL
+            // };
+            // const tx = await contract?.createNewTender(tenderInfo);
+            // await tx.wait();
+            write?.();
             setLoading(false);
         } catch (e) {
             toast({
@@ -140,7 +173,6 @@ const Create = () => {
                 type="file" 
                 id="fileupload"
                 onChange={handleFileChange} 
-                required
             />
             <FormLabel className="mt-[30px]" htmlFor="deadline">
                 Deadline for bidding

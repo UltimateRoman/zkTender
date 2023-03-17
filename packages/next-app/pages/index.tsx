@@ -15,6 +15,7 @@ import { TenderManagerAddress } from "../../hardhat/contractAddress";
 
 const Home: NextPage = () => {
   const [hydrated, setHydrated] = useState(false);
+  const [tenders, setTenders] = useState<any>([]);
 
   const { address, isConnected } = useAccount();
   const { data, isError } = useContractRead({
@@ -23,9 +24,15 @@ const Home: NextPage = () => {
     functionName: "getUsername",
     args: [address]
   });
+  const { data: data1, isError: isError1 } = useContractRead({
+    address: TenderManagerAddress,
+    abi: TenderManager,
+    functionName: "getAllTenders"
+  });
 
   useEffect(() => {
     setHydrated(true);
+    setTenders(data1);
   },[]);
 
   return (
@@ -39,13 +46,12 @@ const Home: NextPage = () => {
         {
           hydrated &&
           <p className={styles.code}>
-            {isConnected ? "Welcome " + data as string : ""}
+            {isConnected ? "Welcome " + (data ? data as string : "New User") : ""}
           </p>
         }
 
         <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.tsx</code>
+          Available tenders
         </p>
 
         <div className={styles.grid}>

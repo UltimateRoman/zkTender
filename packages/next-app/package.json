@@ -12,6 +12,7 @@
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
     "@rainbow-me/rainbowkit": "^0.8.1",
+    "circomlibjs": "^0.1.7",
     "ethers": "^5.7.0",
     "framer-motion": "^6.5.1",
     "next": "12.2.5",

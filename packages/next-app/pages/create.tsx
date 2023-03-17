@@ -16,7 +16,12 @@ import {
     Contract, 
     Signer
 } from 'ethers';
-import { useSigner } from 'wagmi';
+import { 
+    useSigner, 
+    useAccount,
+    useContractRead
+} from 'wagmi';
+import { useRouter } from "next/router";
 import { Web3Storage } from 'web3.storage';
 import DatePicker from 'react-datepicker'; 
 import DefaultLayout from "../layouts/DefaultLayout";
@@ -25,6 +30,7 @@ import { TenderManagerAddress } from "../../hardhat/contractAddress";
 
 const Create = () => {
     const toast = useToast();
+    const router = useRouter();
     const [loading, setLoading] = useState<boolean>(false);
     const [contract, setContract] = useState<Contract>();
     const [title, setTitle] = useState<string>("");
@@ -33,10 +39,35 @@ const Create = () => {
     const [biddingDeadline, setBiddingDeadline] = useState<Date>(new Date());
 
     const { data: signer } = useSigner();
+    const { address, isConnected } = useAccount();
+    const { data: username, isError: err1 } = useContractRead({
+        address: TenderManagerAddress,
+        abi: TenderManager,
+        functionName: "getUsername",
+        args: [address]
+    });
 
     useEffect(() => {
-        const contract = new ethers.Contract(TenderManagerAddress, TenderManager, signer as Signer);
-        setContract(contract);
+        if (!isConnected) {
+            toast({
+                title: "Wallet not connected",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            router.push("/");
+        } else if (username === undefined) {
+            toast({
+                title: "User not registered",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            router.push("/");
+        } else {
+            const contract = new ethers.Contract(TenderManagerAddress, TenderManager, signer as Signer);
+            setContract(contract);
+        }
     },[]);
 
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +105,6 @@ const Create = () => {
                 duration: 3000,
                 isClosable: true
             });
-            setLoading(false);
         } catch (e) {
             toast({
                 title: "Error: Transaction failed",
@@ -83,8 +113,8 @@ const Create = () => {
                 isClosable: true,
             });
             console.log("Error: ", e);
-            setLoading(false);
         }
+        setLoading(true);
     }
 
     return(

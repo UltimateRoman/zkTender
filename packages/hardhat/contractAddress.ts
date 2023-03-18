@@ -1,2 +1,2 @@
-export const TenderManagerAddress = "0x10dAC83D46A1b1701125DCD01A02d97CfAE115C4";
-export const VerifierAddress = "0x1f921fD07ad8B1FF7d2D9f5D1eEd9629Ef949272";
+export const TenderManagerAddress = '0x73C70c0b58E0734b053EB1234e27C93De4d585B6';
+export const VerifierAddress = '0x0BC5A19d9564C371Da6874429f2F183D7b24E3Ef';

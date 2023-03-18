@@ -114,7 +114,7 @@ const Create = () => {
             });
             console.log("Error: ", e);
         }
-        setLoading(true);
+        setLoading(false);
     }
 
     return(

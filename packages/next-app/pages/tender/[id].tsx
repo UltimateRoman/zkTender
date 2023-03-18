@@ -44,6 +44,8 @@ const Tender = () => {
     const router = useRouter();
     const url = String(router.query.id);
 
+    const [showChild, setShowChild] = useState(false);
+
     const [loading, setLoading] = useState<boolean>(false);
     const [contract, setContract] = useState<Contract>();
     const [bidValue, setBidValue] = useState<string>("");
@@ -109,6 +111,7 @@ const Tender = () => {
             } else {
                 const contract = new ethers.Contract(url, TenderABI["default"], signer as Signer);
                 setContract(contract);
+                setShowChild(true);
             }
         } else if ((data as any)[0] === undefined) {
             toast({
@@ -252,7 +255,12 @@ const Tender = () => {
         setLoading(false);
     };
 
-    return(
+    if (!showChild) {
+        return null;
+    }
+    if (typeof window === 'undefined') {
+        return <></>;
+    } else return(
         <DefaultLayout>
             {isConnected &&
             <div className="flex flex-col justify-center">

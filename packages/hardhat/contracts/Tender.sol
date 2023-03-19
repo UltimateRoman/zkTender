@@ -13,17 +13,18 @@ contract Tender is Initializable {
     }
 
     bool isCancelled;
-    address owner;
-    address evaluator;
-    address winningBidder;
     address managerContract;
     mapping(address => uint256) bidValue;
 
     uint8 public constant MAX_BIDS = 4;
     uint256 public constant DEPOSIT_AMOUNT = 0.05 ether;
 
+    bool public refundCompleted;
     uint256 public numberOfPenalizedBidders;
     uint256 public winningBid;
+    address public owner;
+    address public evaluator;
+    address public winningBidder;
     bytes32[] public bids;
     address[] public bidders;
     mapping(address => bytes32) public sealedBid;
@@ -109,6 +110,7 @@ contract Tender is Initializable {
     }
 
     function refundDeposits() external {
+        require(refundCompleted == false, "refund already completed");
         require(winningBidder != address(0), "winner not selected");
         for (uint8 i = 0; i < bidders.length; ++i) {
             if (bidders[i] != winningBidder && !isPenalized[bidders[i]]) {
@@ -156,6 +158,10 @@ contract Tender is Initializable {
             bidValueArray[i] = bidValue[bidders[i]];
         }
         return bidValueArray;
+    }
+
+    function isWinnerSelected() public view returns (bool) {
+        return winningBidder != address(0);
     }
 
     function winningBidderUsername() public view returns (string memory) {

@@ -28,7 +28,8 @@ const Home: NextPage = () => {
   const { data: data1, isError: isError1 } = useContractRead({
     address: TenderManagerAddress,
     abi: TenderManager,
-    functionName: "getAllTenders"
+    functionName: "getAllTenders",
+    watch: true
   });
 
   useEffect(() => {

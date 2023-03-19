@@ -10,8 +10,6 @@ import {
 import { 
     useSigner, 
     useAccount,
-    useContract,
-    useContractRead,
     useContractReads
 } from 'wagmi';
 import {
@@ -19,7 +17,6 @@ import {
     Text,
     Card,
     Stack,
-    Input,
     Button,
     Heading,
     CardBody,
@@ -36,7 +33,7 @@ import { useRouter } from "next/router";
 import * as TenderABI from "../../abis/Tender.json";
 import TenderManager from "../../abis/TenderManager.json";
 import { buildPoseidonOpt as buildPoseidon } from 'circomlibjs';
-import { getAddressSum, generateProof } from "../../utils/utils";
+import { getAddressSum } from "../../utils/utils";
 import { TenderManagerAddress } from "../../../hardhat/contractAddress";
 import DefaultLayout from "../../layouts/DefaultLayout";
 
@@ -70,35 +67,57 @@ const Tender = () => {
             },
             {
                 ...tenderContract,
-                functionName: "tenderInfo"
+                functionName: "tenderInfo",
+                watch: true
             },
             {
                 ...tenderContract,
-                functionName: "currentStage"
+                functionName: "currentStage",
+                watch: true
             },
             {
                 ...tenderContract,
-                functionName: "getAllBidders"
+                functionName: "getAllBidders",
+                watch: true
             },
             {
                 ...tenderContract,
-                functionName: "getAllSealedBids"
+                functionName: "getAllSealedBids",
+                watch: true
             },
             {
                 ...tenderContract,
-                functionName: "bidRevealCompleted"
+                functionName: "bidRevealCompleted",
+                watch: true
             },
             {
                 ...tenderContract,
-                functionName: "bidderUsernames"
+                functionName: "bidderUsernames",
+                watch: true
             },
             {
                 ...tenderContract,
-                functionName: "numberOfPenalizedBidders"
+                functionName: "numberOfPenalizedBidders",
+                watch: true
             },
             {
                 ...tenderContract,
-                functionName: "winningBid"
+                functionName: "winningBid",
+                watch: true
+            },
+            {
+                ...tenderContract,
+                functionName: "isWinnerSelected",
+                watch: true
+            },
+            {
+                ...tenderContract,
+                functionName: "evaluator"
+            },
+            {
+                ...tenderContract,
+                functionName: "refundCompleted",
+                watch: true
             }
         ],
     });
@@ -204,16 +223,16 @@ const Tender = () => {
                 sealedBids,
                 bids
             };
-            const [proof, publicSignals, calldata] = await generateProof(inputs);
-            console.log(proof, publicSignals, calldata);
-            let penalizedBidders: string[] = [];
-            for (let i=2; i < 2 + bidders.length; ++i) {
-                if (publicSignals[i] != "1") {
-                    penalizedBidders.push(bidders[i-2])
-                }
-            }
-            const tx = await contract?.verifyBids(penalizedBidders);
-            await tx.wait();
+            // const [proof, publicSignals, calldata] = await generateProof(inputs);
+            // console.log(proof, publicSignals, calldata);
+            // let penalizedBidders: string[] = [];
+            // for (let i=2; i < 2 + bidders.length; ++i) {
+            //     if (publicSignals[i] != "1") {
+            //         penalizedBidders.push(bidders[i-2])
+            //     }
+            // }
+            // const tx = await contract?.verifyBids(penalizedBidders);
+            // await tx.wait();
             toast({
                 title: "Bids verified",
                 description: "Successfully verified the submitted bids",
@@ -265,13 +284,13 @@ const Tender = () => {
     } else return(
         <DefaultLayout>
             {isConnected &&
-            <div className="flex flex-col justify-center">
+            <div className="flex flex-col justify-center max-w-full">
                 <div className="flex flex-direction justify-center">
                     <h1 className="text-4xl font-semibold leading-[90px]">
                         <span className="font-black text-[#e7ff6d]">{(data as any)[1]?.title}</span>
                     </h1>   
                 </div>
-                <div className="flex-initial">
+                <div className="flex-auto justify-center items-center">
                     <Card>
                         <CardHeader>
                             <Heading size='md'>Tender Information</Heading>
@@ -285,6 +304,14 @@ const Tender = () => {
                                 </Heading>
                                 <Text pt='2' fontSize='sm'>
                                     {(data as any)[1]?.description}
+                                </Text>
+                            </Box>
+                            <Box>
+                                <Heading size='xs' textTransform='uppercase'>
+                                    Tender creator
+                                </Heading>
+                                <Text pt='2' fontSize='sm'>
+                                    {(data as any)[1]?.creator}
                                 </Text>
                             </Box>
                             <Box>
@@ -342,13 +369,28 @@ const Tender = () => {
                                     {(data as any)[3]?.length}
                                 </Text>
                             </Box>
+                            {
+                                (data as any)[3]?.length > 0 &&
+                                <Box>
+                                    <Heading size='xs' textTransform='uppercase'>
+                                        Bidders
+                                    </Heading>
+                                    {
+                                        (data as any)[6]?.map((bidder: string) => (
+                                            <Text pt='2' fontSize='sm'>
+                                                { bidder }
+                                            </Text>
+                                        ))
+                                    }
+                                </Box>
+                            }
                             </Stack>
                         </CardBody>
                     </Card>
                 </div>
                 {
                     (data as any)[2] == 0 &&
-                    <div className="items-center mt-10 pb-10 pt-10 z-40 justify-center max-w-lg rounded-md flex-none">
+                    <div className="mt-10 pb-10 pt-10 z-40 justify-center max-w-lg rounded-md flex-none">
                         <Card>
                         <CardHeader>
                             <Heading size='md'>Place your bid for the tender</Heading>
@@ -382,7 +424,7 @@ const Tender = () => {
                     </div>
                 }
                 {
-                    (data as any)[2] == 1 &&
+                    ((data as any)[2] == 1 && (data as any)[5] == false) &&
                     <div className="items-center mt-10 pb-10 pt-10 z-40 justify-center max-w-lg rounded-md flex-none">
                         <Card>
                         <CardHeader>
@@ -411,6 +453,50 @@ const Tender = () => {
                                 onClick={revealBid}
                             >
                                 Submit
+                            </Button>
+                        </CardBody>
+                        </Card>
+                    </div>
+                }
+                {
+                    ((data as any)[2] == 1 && (data as any)[5] == true && (data as any)[10] == address) &&
+                    <div className="items-center mt-10 pb-10 pt-10 z-40 justify-center max-w-lg rounded-md flex-none">
+                        <Card>
+                        <CardHeader>
+                            <Heading size='md'>Evaluator controls</Heading>
+                        </CardHeader>
+                        <CardBody>
+                            <Button
+                                isLoading={loading}
+                                loadingText="Loading..."
+                                type="submit"
+                                colorScheme="teal"
+                                className="mt-[20px] w-100"
+                                onClick={verifyBids}
+                            >
+                                Verify Bids
+                            </Button>
+                        </CardBody>
+                        </Card>
+                    </div>
+                }
+                {
+                    ((data as any)[2] == 2 && (data as any)[10] == address && (data as any)[11] == false) &&
+                    <div className="items-center mt-10 pb-10 pt-10 z-40 justify-center max-w-lg rounded-md flex-none">
+                        <Card>
+                        <CardHeader>
+                            <Heading size='md'>Evaluator controls</Heading>
+                        </CardHeader>
+                        <CardBody>
+                            <Button
+                                isLoading={loading}
+                                loadingText="Loading..."
+                                type="submit"
+                                colorScheme="teal"
+                                className="mt-[20px] w-100"
+                                onClick={refundDeposits}
+                            >
+                                Refund Deposits
                             </Button>
                         </CardBody>
                         </Card>

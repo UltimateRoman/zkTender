@@ -15,11 +15,13 @@
     "circomlibjs": "^0.1.7",
     "ethers": "^5.7.0",
     "framer-motion": "^6.5.1",
+    "fs": "^0.0.1-security",
     "next": "12.2.5",
     "react": "18.2.0",
     "react-datepicker": "^4.10.0",
     "react-dom": "18.2.0",
     "sass": "^1.59.3",
+    "snarkjs": "^0.6.9",
     "wagmi": "^0.9.6",
     "web3.storage": "^4.4.0"
   },

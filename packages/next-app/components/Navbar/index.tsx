@@ -11,6 +11,10 @@ const navLinks: { text: string; link: string }[] = [
     text: "Create Tender",
     link: "/create",
   },
+  {
+    text: "Verify Proof",
+    link: "/verify",
+  },
 ];
 
 const Navbar = () => {

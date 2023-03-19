@@ -122,6 +122,19 @@
   },
   {
     "inputs": [],
+    "name": "evaluator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getAllBidders",
     "outputs": [
       {
@@ -235,12 +248,38 @@
   },
   {
     "inputs": [],
+    "name": "isWinnerSelected",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "numberOfPenalizedBidders",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -257,6 +296,19 @@
     "name": "placeBid",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "refundCompleted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -352,6 +404,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "winningBidder",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

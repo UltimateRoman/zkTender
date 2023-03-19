@@ -13,7 +13,7 @@ template LowestBid(bidCount) {
     var lowestValue = bids[0][0];
     var lowestSealedBid = sealedBids[0];
 
-    for (var i = 1; i < bidCount; i++) {
+    for (var i = 0; i < bidCount; i++) {
       hashes[i] = Poseidon(2);
       hashes[i].inputs[0] <== bids[i][0];
       hashes[i].inputs[1] <== bids[i][1];

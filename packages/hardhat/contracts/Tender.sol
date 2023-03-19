@@ -9,8 +9,10 @@ contract Tender is Initializable {
         string title;
         string description;
         string document;
+        string creator;
     }
 
+    bool isCancelled;
     address owner;
     address evaluator;
     address winningBidder;
@@ -20,9 +22,11 @@ contract Tender is Initializable {
     uint8 public constant MAX_BIDS = 4;
     uint256 public constant DEPOSIT_AMOUNT = 0.05 ether;
 
+    uint256 public winningBid;
     bytes32[] public bids;
     address[] public bidders;
     mapping(address => bytes32) public sealedBid;
+    mapping(address => bool) public isPenalized;
 
     TenderInfo public tenderInfo;
 
@@ -69,18 +73,34 @@ contract Tender is Initializable {
         bidValue[msg.sender] = _value;
     }
 
-    function verifyBids(bytes32[] calldata hashedBids, bytes32 lowestBidHash) 
+    function verifyBids(address[] calldata penalizedBidders) 
         external 
         onlyAfter(tenderInfo.biddingDeadline) 
     {
         require(msg.sender == evaluator, "only evaluator");
         require(allBidsRevealed() == true, "bid reveal incomplete");
-        for (uint8 i = 0; i < bids.length; ++i) {
-            require(bids[i] == hashedBids[i], "invalid bid amount");
+        require(winningBidder == address(0), "winner already selected");
+        address[] memory eligibleBidders = new address[](bidders.length - penalizedBidders.length);
+        for (uint8 i = 0; i < penalizedBidders.length; ++i) {
+            isPenalized[penalizedBidders[i]] = true;
         }
-        for (uint8 i = 0; i < bidders.length; ++i) {
-            if (sealedBid[bidders[i]] == lowestBidHash) {
-                winningBidder = bidders[i];
+        if (penalizedBidders.length == bidders.length) {
+            isCancelled = true;
+        } else {
+            uint8 j = 0;
+            for (uint8 i = 0; i < bidders.length; ++i) {
+                if (!isPenalized[bidders[i]]) {
+                    eligibleBidders[j] = bidders[i];
+                    ++j;
+                }
+            }
+            winningBid = bidValue[eligibleBidders[0]];
+            winningBidder = eligibleBidders[0];
+            for (uint8 i = 0; i < eligibleBidders.length; ++i) {
+                if (bidValue[eligibleBidders[i]] < winningBid) {
+                    winningBid = bidValue[eligibleBidders[i]];
+                    winningBidder = eligibleBidders[i];
+                }
             }
         }
     }
@@ -88,7 +108,7 @@ contract Tender is Initializable {
     function refundDeposits() external {
         require(winningBidder != address(0), "winner not selected");
         for (uint8 i = 0; i < bidders.length; ++i) {
-            if (bidders[i] != winningBidder) {
+            if (bidders[i] != winningBidder && !isPenalized[bidders[i]]) {
                 payable(bidders[i]).transfer(DEPOSIT_AMOUNT);
             }
         }
@@ -103,7 +123,9 @@ contract Tender is Initializable {
     }
 
     function currentStage() public view returns (uint8) {
-        if (block.timestamp <= tenderInfo.biddingDeadline) {
+        if (isCancelled) {
+            return 3;
+        } else if (block.timestamp <= tenderInfo.biddingDeadline) {
             return 0;
         } else {
             if (winningBidder == address(0)) {

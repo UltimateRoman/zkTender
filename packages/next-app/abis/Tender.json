@@ -169,6 +169,11 @@
             "internalType": "string",
             "name": "document",
             "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "creator",
+            "type": "string"
           }
         ],
         "internalType": "struct Tender.TenderInfo",
@@ -194,6 +199,25 @@
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "isPenalized",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -271,6 +295,11 @@
         "internalType": "string",
         "name": "document",
         "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "creator",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -279,19 +308,27 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32[]",
-        "name": "hashedBids",
-        "type": "bytes32[]"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "lowestBidHash",
-        "type": "bytes32"
+        "internalType": "address[]",
+        "name": "penalizedBidders",
+        "type": "address[]"
       }
     ],
     "name": "verifyBids",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "winningBid",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

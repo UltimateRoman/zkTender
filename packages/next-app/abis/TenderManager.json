@@ -108,6 +108,11 @@
             "internalType": "string",
             "name": "document",
             "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "creator",
+            "type": "string"
           }
         ],
         "internalType": "struct Tender.TenderInfo",

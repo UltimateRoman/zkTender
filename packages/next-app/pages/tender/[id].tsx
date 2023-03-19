@@ -33,10 +33,10 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { getAddressSum } from "../../utils/utils";
 import * as TenderABI from "../../abis/Tender.json";
 import TenderManager from "../../abis/TenderManager.json";
 import { buildPoseidonOpt as buildPoseidon } from 'circomlibjs';
+import { getAddressSum, generateProof } from "../../utils/utils";
 import { TenderManagerAddress } from "../../../hardhat/contractAddress";
 import DefaultLayout from "../../layouts/DefaultLayout";
 
@@ -91,6 +91,14 @@ const Tender = () => {
             {
                 ...tenderContract,
                 functionName: "bidderUsernames"
+            },
+            {
+                ...tenderContract,
+                functionName: "numberOfPenalizedBidders"
+            },
+            {
+                ...tenderContract,
+                functionName: "winningBid"
             }
         ],
     });
@@ -183,23 +191,28 @@ const Tender = () => {
 
     const verifyBids = async () => {
         setLoading(true);
-        const poseidon = await buildPoseidon();
         try {
             const bidValues = await contract?.getBidValues();
+            const bidders = (data as any)[3];
             const sealedBids = (data as any)[4];
-            // for (let i = 0; i < ((data as any)[3] as string[]).length; i++) {
-            //     const sealedBid = (ethers.BigNumber.from(
-            //         poseidon.F.toString(poseidon([parseInt(bidValues[i]), getAddressSum(((data as any)[3] as string[])[i] as string)]))
-            //     )).toHexString();
-            //     sealedBids.push(sealedBid);
-            //     if (bidValues[i] < lowestBid) {
-            //         lowestBid = bidValues[i];
-            //         lowestHash = (ethers.BigNumber.from(
-            //             poseidon.F.toString(poseidon([parseInt(bidValues[i]), getAddressSum(((data as any)[3] as string[])[i] as string)]))
-            //         )).toHexString();
-            //     }
-            // }
-            const tx = await contract?.verifyBids();
+            let bids = [];
+            for (let i=0; i < bidValues.length; ++i) {
+                const bid = [bidValues[i].toString(), getAddressSum(bidders[i]).toString()]
+                bids.push(bid);
+            }
+            const inputs = {
+                sealedBids,
+                bids
+            };
+            const [proof, publicSignals, calldata] = await generateProof(inputs);
+            console.log(proof, publicSignals, calldata);
+            let penalizedBidders: string[] = [];
+            for (let i=2; i < 2 + bidders.length; ++i) {
+                if (publicSignals[i] != "1") {
+                    penalizedBidders.push(bidders[i-2])
+                }
+            }
+            const tx = await contract?.verifyBids(penalizedBidders);
             await tx.wait();
             toast({
                 title: "Bids verified",
@@ -286,11 +299,32 @@ const Tender = () => {
                             </Box>
                             <Box>
                                 <Heading size='xs' textTransform='uppercase'>
-                                    Current Stage
+                                    Current Status
                                 </Heading>
-                                <Text pt='2' fontSize='sm'>
-                                    {(data as any)[2] == 0 ? "Bidding in progress" : "Bidding completed"}
-                                </Text>
+                                {
+                                    (data as any)[2] == 0 &&
+                                    <Text pt='2' fontSize='sm'>
+                                        Bidding in progress
+                                    </Text>
+                                }
+                                {
+                                    (data as any)[2] == 1 &&
+                                    <Text pt='2' fontSize='sm'>
+                                        Bidding completed, bid reveal in progress
+                                    </Text>
+                                }
+                                {
+                                    (data as any)[2] == 2 &&
+                                    <Text pt='2' fontSize='sm'>
+                                        Completed and winner selected
+                                    </Text>
+                                }
+                                {
+                                    (data as any)[2] == 3 &&
+                                    <Text pt='2' fontSize='sm'>
+                                        Cancelled
+                                    </Text>
+                                }
                             </Box>
                             <Box>
                                 <Heading size='xs' textTransform='uppercase'>
@@ -302,7 +336,7 @@ const Tender = () => {
                             </Box>
                             <Box>
                                 <Heading size='xs' textTransform='uppercase'>
-                                    Bids Received
+                                    Number of Bids Received
                                 </Heading>
                                 <Text pt='2' fontSize='sm'>
                                     {(data as any)[3]?.length}

@@ -94,7 +94,8 @@ const Create = () => {
                 Date.parse(biddingDeadline?.toDateString()),
                 title,
                 description,
-                documentURL
+                documentURL,
+                username as string
             ];
             const tx = await contract?.connect(signer as Signer)?.createNewTender(tenderInfo);
             await tx?.wait();

@@ -63,4 +63,12 @@ contract TenderManager is Ownable {
     function getUsername(address user) public view returns (string memory) {
         return usernameOf[user];
     }
+
+    function getUsernames(address[] calldata users) public view returns (string[] memory) {
+        string[] memory usernames = new string[](users.length);
+        for (uint8 i = 0; i < users.length; ++i) {
+            usernames[i] = usernameOf[users[i]];
+        }
+        return usernames;
+    }
 }

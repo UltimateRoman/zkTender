@@ -22,6 +22,7 @@ contract Tender is Initializable {
     uint8 public constant MAX_BIDS = 4;
     uint256 public constant DEPOSIT_AMOUNT = 0.05 ether;
 
+    uint256 public numberOfPenalizedBidders;
     uint256 public winningBid;
     bytes32[] public bids;
     address[] public bidders;
@@ -70,6 +71,7 @@ contract Tender is Initializable {
 
     function revealBid(uint256 _value) external onlyAfter(tenderInfo.biddingDeadline) {
         require(bidValue[msg.sender] == 0, "already revealed bid");
+        require(_value > 0, "bid amount cannot be 0");
         bidValue[msg.sender] = _value;
     }
 
@@ -78,8 +80,9 @@ contract Tender is Initializable {
         onlyAfter(tenderInfo.biddingDeadline) 
     {
         require(msg.sender == evaluator, "only evaluator");
-        require(allBidsRevealed() == true, "bid reveal incomplete");
+        require(bidRevealCompleted() == true, "bid reveal incomplete");
         require(winningBidder == address(0), "winner already selected");
+        numberOfPenalizedBidders = penalizedBidders.length;
         address[] memory eligibleBidders = new address[](bidders.length - penalizedBidders.length);
         for (uint8 i = 0; i < penalizedBidders.length; ++i) {
             isPenalized[penalizedBidders[i]] = true;
@@ -136,7 +139,7 @@ contract Tender is Initializable {
         }
     }
 
-    function allBidsRevealed() public view returns (bool) {
+    function bidRevealCompleted() public view returns (bool) {
         for (uint i=0; i < bidders.length; ++i) {
             if (bidValue[bidders[i]] == 0) {
                 return false;
@@ -146,8 +149,8 @@ contract Tender is Initializable {
     }
 
     function getBidValues() public view returns (uint256[] memory) {
-        require(msg.sender == evaluator, "Only evaluator");
-        require(allBidsRevealed() == true, "bid reveal incomplete");
+        require(msg.sender == evaluator, "only evaluator");
+        require(bidRevealCompleted() == true, "bid reveal incomplete");
         uint256[] memory bidValueArray = new uint256[](bids.length);
         for (uint i=0; i < bidders.length; ++i) {
             bidValueArray[i] = bidValue[bidders[i]];
@@ -155,9 +158,13 @@ contract Tender is Initializable {
         return bidValueArray;
     }
 
-    function winningBidderUsername() public view onlyAfter(tenderInfo.biddingDeadline) returns (string memory) {
-        require(winningBidder != address(0), "winner not selected");
+    function winningBidderUsername() public view returns (string memory) {
         (, bytes memory data) = managerContract.staticcall(abi.encodeWithSignature("getUsername(address)", winningBidder));
         return abi.decode(data, (string));
+    }
+
+    function bidderUsernames() public view returns (string[] memory) {
+        (, bytes memory data) = managerContract.staticcall(abi.encodeWithSignature("getUsernames(address[])", bidders));
+        return abi.decode(data, (string[]));
     }
 }

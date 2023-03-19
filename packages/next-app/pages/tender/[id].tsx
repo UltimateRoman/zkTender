@@ -33,6 +33,7 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
+import { getAddressSum } from "../../utils/utils";
 import * as TenderABI from "../../abis/Tender.json";
 import TenderManager from "../../abis/TenderManager.json";
 import { buildPoseidonOpt as buildPoseidon } from 'circomlibjs';
@@ -85,7 +86,11 @@ const Tender = () => {
             },
             {
                 ...tenderContract,
-                functionName: "allBidsRevealed"
+                functionName: "bidRevealCompleted"
+            },
+            {
+                ...tenderContract,
+                functionName: "bidderUsernames"
             }
         ],
     });
@@ -128,15 +133,8 @@ const Tender = () => {
         setLoading(true);
         try {
             const poseidon = await buildPoseidon();
-            let s = 0;
-            for (let i = 0; i < (address as string).length; i++) {
-                const c = (address as string).charAt(i);
-                if (c >= '0' && c <= '9') {
-                    s += parseInt(c);
-                }
-            }
             const sealedBid = (ethers.BigNumber.from(
-                poseidon.F.toString(poseidon([parseInt(bidValue), s]))
+                poseidon.F.toString(poseidon([parseInt(bidValue), getAddressSum(address as string)]))
             )).toHexString();
             const tx = await contract?.placeBid(sealedBid, {value: ethers.utils.parseEther("0.05")});
             await tx.wait();
@@ -188,29 +186,20 @@ const Tender = () => {
         const poseidon = await buildPoseidon();
         try {
             const bidValues = await contract?.getBidValues();
-            let lowestBid = bidValues[0];
-            let lowestHash = "";
-            let sealedBids = [];
-            for (let i = 0; i < ((data as any)[0] as string[]).length; i++) {
-                let s = 0;
-                for (let j = 0; j < (((data as any)[0] as string[])[i] as string).length; j++) {
-                    const c = (((data as any)[0] as string[])[i] as string).charAt(j);
-                    if (c >= '0' && c <= '9') {
-                        s += parseInt(c);
-                    }
-                }
-                const sealedBid = (ethers.BigNumber.from(
-                    poseidon.F.toString(poseidon([parseInt(bidValues[i]), s]))
-                )).toHexString();
-                sealedBids.push(sealedBid);
-                if (bidValues[i] < lowestBid) {
-                    lowestBid = bidValues[i];
-                    lowestHash = (ethers.BigNumber.from(
-                        poseidon.F.toString(poseidon([parseInt(bidValues[i]), s]))
-                    )).toHexString();
-                }
-            }
-            const tx = await contract?.verifyBids(sealedBids, lowestHash);
+            const sealedBids = (data as any)[4];
+            // for (let i = 0; i < ((data as any)[3] as string[]).length; i++) {
+            //     const sealedBid = (ethers.BigNumber.from(
+            //         poseidon.F.toString(poseidon([parseInt(bidValues[i]), getAddressSum(((data as any)[3] as string[])[i] as string)]))
+            //     )).toHexString();
+            //     sealedBids.push(sealedBid);
+            //     if (bidValues[i] < lowestBid) {
+            //         lowestBid = bidValues[i];
+            //         lowestHash = (ethers.BigNumber.from(
+            //             poseidon.F.toString(poseidon([parseInt(bidValues[i]), getAddressSum(((data as any)[3] as string[])[i] as string)]))
+            //         )).toHexString();
+            //     }
+            // }
+            const tx = await contract?.verifyBids();
             await tx.wait();
             toast({
                 title: "Bids verified",
@@ -234,7 +223,7 @@ const Tender = () => {
     const refundDeposits = async () => {
         setLoading(true);
         try {
-            const tx = await contract?.refundDeposits();
+            const tx = await contract?.connect(signer as Signer)?.refundDeposits();
             await tx.wait();
             toast({
                 title: "Refund completed",

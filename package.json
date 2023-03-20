@@ -13,6 +13,7 @@
     "deploy:mumbai": "npm run deploy:mumbai -w @zktender/hardhat",
     "generate:proof": "npm run generate:proof -w @zktender/hardhat",
     "setup:circom": "npm run setup:circom -w @zktender/hardhat",
+    "start:api": "npm run start:api -w @zktender/backend",
     "test": "npm run test -w @zktender/hardhat",
     "verify": "npm run verify -w @zktender/hardhat",
     "version:fix": "npm run version:fix -w @zktender/hardhat",

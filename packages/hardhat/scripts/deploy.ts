@@ -4,6 +4,7 @@ import fs from 'fs';
 
 async function main() {
   const [deployer] = await ethers.getSigners();
+  console.log(deployer.address);
   const Verifier = await ethers.getContractFactory("Verifier");
   const verifier = await Verifier.deploy();
   await verifier.deployed();

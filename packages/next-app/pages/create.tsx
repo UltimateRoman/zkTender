@@ -75,7 +75,7 @@ const Create = () => {
         const files: FileList | null = e.target.files;
         const client = new Web3Storage({ token: process.env.WEB3STORAGE_TOKEN || "" });
         const cid = await client.put(files as any);
-        setDocumentURL(`https://${cid}.ipfs.dweb.link/`);
+        setDocumentURL(cid);
         toast({
             title: "Uploaded file",
             description: "Successfully uploaded file to IPFS",

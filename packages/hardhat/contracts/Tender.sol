@@ -29,6 +29,7 @@ contract Tender is Initializable {
     address[] public bidders;
     mapping(address => bytes32) public sealedBid;
     mapping(address => bool) public isPenalized;
+    string public proofCID;
 
     TenderInfo public tenderInfo;
 
@@ -78,7 +79,7 @@ contract Tender is Initializable {
 
     function verifyBids(address[] calldata penalizedBidders) 
         external 
-        onlyAfter(tenderInfo.biddingDeadline) 
+        onlyAfter(tenderInfo.biddingDeadline)
     {
         require(msg.sender == evaluator, "only evaluator");
         require(bidRevealCompleted() == true, "bid reveal incomplete");
@@ -117,6 +118,17 @@ contract Tender is Initializable {
                 payable(bidders[i]).transfer(DEPOSIT_AMOUNT);
             }
         }
+        refundCompleted = true;
+    }
+
+    function setEvaluator(address _evaluator) external {
+        require(msg.sender == owner, "only owner");
+        evaluator = _evaluator;
+    }
+
+    function setProof(string memory _proofCID) external {
+        require(msg.sender == evaluator, "only evaluator");
+        proofCID = _proofCID;
     }
 
     function getAllBidders() public view returns (address[] memory) {
@@ -130,7 +142,7 @@ contract Tender is Initializable {
     function currentStage() public view returns (uint8) {
         if (isCancelled) {
             return 3;
-        } else if (block.timestamp <= tenderInfo.biddingDeadline) {
+        } else if (block.timestamp < tenderInfo.biddingDeadline) {
             return 0;
         } else {
             if (winningBidder == address(0)) {

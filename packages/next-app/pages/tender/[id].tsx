@@ -28,9 +28,18 @@ import {
     NumberInputStepper,
     NumberIncrementStepper,
     NumberDecrementStepper,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalFooter,
+    ModalBody,
+    ModalCloseButton,
+    useDisclosure,
     useToast,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
+import { File, Web3Storage } from 'web3.storage';
 import * as TenderABI from "../../abis/Tender.json";
 import TenderManager from "../../abis/TenderManager.json";
 import { buildPoseidonOpt as buildPoseidon } from 'circomlibjs';
@@ -42,12 +51,14 @@ const Tender = () => {
     const toast = useToast();
     const router = useRouter();
     const url = String(router.query.id);
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     const [showChild, setShowChild] = useState(false);
 
     const [loading, setLoading] = useState<boolean>(false);
     const [contract, setContract] = useState<Contract>();
     const [bidValue, setBidValue] = useState<string>("");
+    const [proof, setProof] = useState<string>("");
 
     const { data: signer } = useSigner();
     const { address, isConnected } = useAccount();
@@ -124,6 +135,11 @@ const Tender = () => {
                 ...tenderContract,
                 functionName: "winningBidderUsername",
                 watch: true
+            },
+            {
+                ...tenderContract,
+                functionName: "proofCID",
+                watch: true
             }
         ],
     });
@@ -171,7 +187,7 @@ const Tender = () => {
             const sealedBid = (ethers.BigNumber.from(
                 poseidon.F.toString(poseidon([parseInt(bidValue), getAddressSum(address as string)]))
             )).toHexString();
-            const tx = await contract?.placeBid(sealedBid, {value: ethers.utils.parseEther("0.05")});
+            const tx = await contract?.connect(signer as Signer)?.placeBid(sealedBid, {value: ethers.utils.parseEther("0.05")});
             await tx.wait();
             toast({
                 title: "Bid submitted",
@@ -195,7 +211,7 @@ const Tender = () => {
     const revealBid = async () => {
         setLoading(true);
         try {
-            const tx = await contract?.revealBid(parseInt(bidValue));
+            const tx = await contract?.connect(signer as Signer)?.revealBid(parseInt(bidValue));
             await tx.wait();
             toast({
                 title: "Bid reveal submitted",
@@ -219,7 +235,7 @@ const Tender = () => {
     const verifyBids = async () => {
         setLoading(true);
         try {
-            const bidValues = await contract?.getBidValues();
+            const bidValues = await contract?.connect(signer as Signer)?.getBidValues();
             const bidders = (data as any)[3];
             const sealedBids = (data as any)[4];
             let bids = [];
@@ -231,16 +247,28 @@ const Tender = () => {
                 sealedBids,
                 bids
             };
-            // const [proof, publicSignals, calldata] = await generateProof(inputs);
-            // console.log(proof, publicSignals, calldata);
-            // let penalizedBidders: string[] = [];
-            // for (let i=2; i < 2 + bidders.length; ++i) {
-            //     if (publicSignals[i] != "1") {
-            //         penalizedBidders.push(bidders[i-2])
-            //     }
-            // }
-            // const tx = await contract?.verifyBids(penalizedBidders);
-            // await tx.wait();
+            const res = await fetch(`http://localhost:8080/generate?inputs=${JSON.stringify(inputs)}`);
+            const [proof, publicSignals] = JSON.parse(await res.text());
+            const obj = {
+                proof,
+                publicSignals
+            };
+            const blob = new Blob([JSON.stringify(obj)], { type: 'application/json' })
+            const files = [
+                new File([blob], 'proof.json')
+            ];
+            const client = new Web3Storage({ token: process.env.WEB3STORAGE_TOKEN || "" });
+            const cid = await client.put(files as any);
+            const tx = await contract?.connect(signer as Signer)?.setProof(cid);
+            await tx.wait();
+            let penalizedBidders: string[] = [];
+            for (let i=2; i < 2 + bidders.length; ++i) {
+                if (publicSignals[i] != "1") {
+                    penalizedBidders.push(bidders[i-2])
+                }
+            }
+            const tx1 = await contract?.connect(signer as Signer)?.verifyBids(penalizedBidders);
+            await tx1.wait();
             toast({
                 title: "Bids verified",
                 description: "Successfully verified the submitted bids",
@@ -275,6 +303,30 @@ const Tender = () => {
         } catch (error) {
             toast({
                 title: "Error: Transaction failed",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            console.log("error", error);
+        }
+        setLoading(false);
+    };
+
+    const generateProof = async () => {
+        setLoading(true);
+        try {
+            const proofCID = (data as any)[13] as string;
+            const res = await fetch(`https://${proofCID}.ipfs.w3s.link/proof.json`);
+            const retData = JSON.parse(await res.text());
+            const proof = retData?.proof;
+            const publicSignals = retData?.publicSignals;
+            const res1 = await fetch(`http://localhost:8080/calldata?proof=${JSON.stringify(proof)}&publicSignals=${JSON.stringify(publicSignals)}`);
+            const calldata = JSON.parse(await res1.text());
+            setProof(calldata);
+            onOpen();
+        } catch (error) {
+            toast({
+                title: "Error: Proof generation failed",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
@@ -326,7 +378,7 @@ const Tender = () => {
                                 <Heading size='xs' textTransform='uppercase'>
                                     Rules and Details
                                 </Heading>
-                                <a href={(data as any)[1]?.document} target='_blank'>
+                                <a href={`https://${(data as any)[1]?.document}.ipfs.dweb.link/`} target='_blank'>
                                     <Text pt='2' fontSize='sm'>
                                         View Document
                                     </Text>
@@ -549,8 +601,49 @@ const Tender = () => {
                         </Card>
                     </div>
                 }
+                {
+                    (data as any)[2] == 2 &&
+                    <div className="items-center mt-10 pt-10 z-40 max-w-sm rounded-md flex-none">
+                        <Card>
+                        <CardHeader>
+                            <Heading size='md'>Proof of fair completion</Heading>
+                        </CardHeader>
+                        <CardBody>
+                            <Button
+                                isLoading={loading}
+                                loadingText="Loading..."
+                                type="submit"
+                                colorScheme="blue"
+                                className="w-100 mb-5"
+                                onClick={generateProof}
+                            >
+                                Generate Proof
+                            </Button>
+                        </CardBody>
+                        </Card>
+                    </div>
+                }
             </div>
             }
+            <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose} size="3xl">
+                <ModalOverlay />
+                <ModalContent>
+                <ModalHeader>Generated Proof</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody>
+                    <Text fontWeight='bold' mb='1rem'>
+                    {proof}
+                    </Text>
+                </ModalBody>
+
+                <ModalFooter>
+                    <Button variant='ghost' onClick={() => {navigator.clipboard.writeText(proof)}}>Copy</Button>
+                    <Button colorScheme='blue' mr={3} onClick={onClose}>
+                        Close
+                    </Button>
+                </ModalFooter>
+                </ModalContent>
+            </Modal>
         </DefaultLayout>
     );
 }

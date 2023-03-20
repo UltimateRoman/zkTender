@@ -35,7 +35,7 @@ const Home: NextPage = () => {
   useEffect(() => {
     setHydrated(true);
     setTenders(data1);
-  },[]);
+  },[tenders?.length]);
 
   return (
     <DefaultLayout>

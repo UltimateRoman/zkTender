@@ -19,6 +19,7 @@ import {
     Stack,
     Button,
     Heading,
+    FormLabel,
     CardBody,
     CardHeader,
     StackDivider,
@@ -118,6 +119,11 @@ const Tender = () => {
                 ...tenderContract,
                 functionName: "refundCompleted",
                 watch: true
+            },
+            {
+                ...tenderContract,
+                functionName: "winningBidderUsername",
+                watch: true
             }
         ],
     });
@@ -145,16 +151,18 @@ const Tender = () => {
                 setContract(contract);
                 setShowChild(true);
             }
-        } else if ((data as any)[0] === undefined) {
-            toast({
-                title: "User not registered",
-                status: "warning",
-                duration: 3000,
-                isClosable: true,
-            });
-            router.push("/");
+        } else if (data !== undefined) {
+            if ((data as any)[0] === "") {
+                toast({
+                    title: "User not registered",
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                router.push("/");
+            }
         }
-    },[url]);
+    },[url, data?.length]);
 
     const placeBid = async () => {
         setLoading(true);
@@ -216,7 +224,7 @@ const Tender = () => {
             const sealedBids = (data as any)[4];
             let bids = [];
             for (let i=0; i < bidValues.length; ++i) {
-                const bid = [bidValues[i].toString(), getAddressSum(bidders[i]).toString()]
+                const bid = [bidValues[i].toString(), getAddressSum(bidders[i]).toString()];
                 bids.push(bid);
             }
             const inputs = {
@@ -283,7 +291,7 @@ const Tender = () => {
         return <></>;
     } else return(
         <DefaultLayout>
-            {isConnected &&
+            {(isConnected && data !== undefined) &&
             <div className="flex flex-col justify-center max-w-full">
                 <div className="flex flex-direction justify-center">
                     <h1 className="text-4xl font-semibold leading-[90px]">
@@ -384,6 +392,39 @@ const Tender = () => {
                                     }
                                 </Box>
                             }
+                            {
+                                (data as any)[9] === true &&
+                                <Box>
+                                    <Heading size='xs' textTransform='uppercase'>
+                                        Winning Bidder
+                                    </Heading>
+                                    <Text pt='2' fontSize='sm'>
+                                        {(data as any)[12]}
+                                    </Text>
+                                </Box>
+                            }
+                            {
+                                (data as any)[9] === true &&
+                                <Box>
+                                    <Heading size='xs' textTransform='uppercase'>
+                                        Winning Bid Amount
+                                    </Heading>
+                                    <Text pt='2' fontSize='sm'>
+                                        {(data as any)[8]?.toString()}
+                                    </Text>
+                                </Box>
+                            }
+                            {
+                                (data as any)[9] === true &&
+                                <Box>
+                                    <Heading size='xs' textTransform='uppercase'>
+                                        Penalized Bidders
+                                    </Heading>
+                                    <Text pt='2' fontSize='sm'>
+                                        {(data as any)[7]?.toString()}
+                                    </Text>
+                                </Box>
+                            }
                             </Stack>
                         </CardBody>
                     </Card>
@@ -396,6 +437,9 @@ const Tender = () => {
                             <Heading size='md'>Place your bid for the tender</Heading>
                         </CardHeader>
                         <CardBody>
+                            <FormLabel>
+                                Enter bid amount (INR)
+                            </FormLabel>
                             <NumberInput 
                                 defaultValue={5001} 
                                 min={5000} 
@@ -414,7 +458,7 @@ const Tender = () => {
                                 loadingText="Loading..."
                                 type="submit"
                                 colorScheme="teal"
-                                className="mt-[20px] w-100"
+                                className="mt-[40px] w-100"
                                 onClick={placeBid}
                             >
                                 Submit
@@ -431,6 +475,9 @@ const Tender = () => {
                             <Heading size='md'>Reveal your bid value</Heading>
                         </CardHeader>
                         <CardBody>
+                            <FormLabel>
+                                Enter bid amount (INR)
+                            </FormLabel>
                             <NumberInput 
                                 defaultValue={5001} 
                                 min={5000} 
@@ -448,8 +495,8 @@ const Tender = () => {
                                 isLoading={loading}
                                 loadingText="Loading..."
                                 type="submit"
-                                colorScheme="teal"
-                                className="mt-[20px] w-100"
+                                colorScheme="blue"
+                                className=" mt-[40px] w-100"
                                 onClick={revealBid}
                             >
                                 Submit
@@ -460,7 +507,7 @@ const Tender = () => {
                 }
                 {
                     ((data as any)[2] == 1 && (data as any)[5] == true && (data as any)[10] == address) &&
-                    <div className="items-center mt-10 pb-10 pt-10 z-40 justify-center max-w-lg rounded-md flex-none">
+                    <div className="items-center mt-10 pt-10 z-40 max-w-sm rounded-md flex-none">
                         <Card>
                         <CardHeader>
                             <Heading size='md'>Evaluator controls</Heading>
@@ -471,7 +518,7 @@ const Tender = () => {
                                 loadingText="Loading..."
                                 type="submit"
                                 colorScheme="teal"
-                                className="mt-[20px] w-100"
+                                className="w-100 mb-5"
                                 onClick={verifyBids}
                             >
                                 Verify Bids
@@ -482,7 +529,7 @@ const Tender = () => {
                 }
                 {
                     ((data as any)[2] == 2 && (data as any)[10] == address && (data as any)[11] == false) &&
-                    <div className="items-center mt-10 pb-10 pt-10 z-40 justify-center max-w-lg rounded-md flex-none">
+                    <div className="items-center mt-10 pt-10 z-40 max-w-sm rounded-md flex-none">
                         <Card>
                         <CardHeader>
                             <Heading size='md'>Evaluator controls</Heading>
@@ -492,8 +539,8 @@ const Tender = () => {
                                 isLoading={loading}
                                 loadingText="Loading..."
                                 type="submit"
-                                colorScheme="teal"
-                                className="mt-[20px] w-100"
+                                colorScheme="blue"
+                                className="w-100 mb-5"
                                 onClick={refundDeposits}
                             >
                                 Refund Deposits

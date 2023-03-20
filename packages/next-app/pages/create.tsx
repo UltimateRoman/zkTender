@@ -56,7 +56,7 @@ const Create = () => {
                 isClosable: true,
             });
             router.push("/");
-        } else if (username === undefined) {
+        } else if (username === "") {
             toast({
                 title: "User not registered",
                 status: "warning",

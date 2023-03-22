@@ -20,14 +20,6 @@ import {
     Button,
     Heading,
     FormLabel,
-    CardBody,
-    CardHeader,
-    StackDivider,
-    NumberInput,
-    NumberInputField,
-    NumberInputStepper,
-    NumberIncrementStepper,
-    NumberDecrementStepper,
     Modal,
     ModalOverlay,
     ModalContent,
@@ -36,30 +28,36 @@ import {
     ModalBody,
     ModalCloseButton,
     useDisclosure,
+    CardBody,
+    CardHeader,
+    StackDivider,
+    NumberInput,
+    NumberInputField,
+    NumberInputStepper,
+    NumberIncrementStepper,
+    NumberDecrementStepper,
     useToast,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { File, Web3Storage } from 'web3.storage';
+import { getAddressSum } from "../../utils/utils";
+import DefaultLayout from "../../layouts/DefaultLayout";
 import * as TenderABI from "../../abis/Tender.json";
 import TenderManager from "../../abis/TenderManager.json";
 import { buildPoseidonOpt as buildPoseidon } from 'circomlibjs';
-import { getAddressSum } from "../../utils/utils";
 import { TenderManagerAddress } from "../../../hardhat/contractAddress";
-import DefaultLayout from "../../layouts/DefaultLayout";
 
 const Tender = () => {
-    const toast = useToast();
-    const router = useRouter();
-    const url = String(router.query.id);
-    const { isOpen, onOpen, onClose } = useDisclosure();
-
     const [showChild, setShowChild] = useState(false);
-
     const [loading, setLoading] = useState<boolean>(false);
     const [contract, setContract] = useState<Contract>();
     const [bidValue, setBidValue] = useState<string>("");
     const [proof, setProof] = useState<string>("");
 
+    const toast = useToast();
+    const router = useRouter();
+    const url = String(router.query.id);
+    const { isOpen, onOpen, onClose } = useDisclosure();
     const { data: signer } = useSigner();
     const { address, isConnected } = useAccount();
     const tenderManagerContract = {
@@ -196,6 +194,7 @@ const Tender = () => {
                 duration: 4000,
                 isClosable: true
             });
+            router?.reload();
         } catch (error) {
             toast({
                 title: "Error: Transaction failed",
@@ -220,6 +219,7 @@ const Tender = () => {
                 duration: 4000,
                 isClosable: true
             });
+            router?.reload();
         } catch (error) {
             toast({
                 title: "Error: Transaction failed",
@@ -276,6 +276,7 @@ const Tender = () => {
                 duration: 4000,
                 isClosable: true
             });
+            router?.reload();
         } catch (error) {
             toast({
                 title: "Error: Verification failed",
@@ -300,6 +301,7 @@ const Tender = () => {
                 duration: 4000,
                 isClosable: true
             });
+            router?.reload();
         } catch (error) {
             toast({
                 title: "Error: Transaction failed",

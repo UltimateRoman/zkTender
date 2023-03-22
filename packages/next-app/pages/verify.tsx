@@ -90,10 +90,10 @@ const Verify = () => {
                 className="bg-white p-[50px] rounded w-full"
             >
             <h2 className="text-center font-semibold text-2xl mb-[40px]">
-                Proof Verification
+                ZK Proof Verification
             </h2>
             <FormLabel className="mt-[10px]" htmlFor="proof">
-                Proof
+                ZK Proof
             </FormLabel>
             <Textarea
                 id="proof"

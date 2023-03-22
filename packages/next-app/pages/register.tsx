@@ -10,56 +10,34 @@ import {
     FormLabel
 } from "@chakra-ui/react";
 import { 
+    useSigner,
     useAccount,
-    useContractRead,
-    useContractWrite,
-    usePrepareContractWrite 
+    useContract,
+    useContractRead 
 } from 'wagmi';
+import { Signer } from "ethers";
 import { useRouter } from "next/router";
 import DefaultLayout from "../layouts/DefaultLayout";
 import TenderManager from "../abis/TenderManager.json";
 import { TenderManagerAddress } from "../../hardhat/contractAddress";
 
 const Register = () => {
-    const toast = useToast();
-    const router = useRouter();
+    const [loading, setLoading] = useState<boolean>(false);
     const [username, setUsername] = useState<string>("");
 
+    const toast = useToast();
+    const router = useRouter();
     const { address, isConnected } = useAccount();
+    const { data: signer } = useSigner();
     const { data, isError: err1 } = useContractRead({
         address: TenderManagerAddress,
         abi: TenderManager,
         functionName: "getUsername",
         args: [address]
     });
-
-    const { config } = usePrepareContractWrite({
+    const contract = useContract({
         address: TenderManagerAddress,
-        abi: TenderManager,
-        functionName: 'registerUser',
-        args: [username]
-    });
-    const { isLoading, write, isError } = useContractWrite({
-        ...config,
-        onSuccess(data) {
-            toast({
-                title: "Registered",
-                description: "Successfully registered username",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-            console.log('Success', data);
-        },
-        onError(error) {
-            toast({
-                title: "Error: transaction failed",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-            console.log(error);
-        }
+        abi: TenderManager
     });
 
     useEffect(() => {
@@ -92,19 +70,28 @@ const Register = () => {
               isClosable: true,
             });
         } else {
+            setLoading(true);
             try {
-                write?.();
+                const tx = await contract?.connect(signer as Signer)?.registerUser(username);
+                await tx.wait();
+                toast({
+                    title: "Registered",
+                    description: "Successfully registered user",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                router.push("/");
             } catch (e) {
-                if (isError) {
-                    toast({
-                        title: "Error: Already registered",
-                        status: "error",
-                        duration: 3000,
-                        isClosable: true,
-                    });
-                }
+                toast({
+                    title: "Error occured: Transaction failed",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                });
                 console.log("Error: ", e);
             }
+            setLoading(false);
         }
     }
 
@@ -130,7 +117,7 @@ const Register = () => {
             />
             <br/><br/>
             <Button
-                isLoading={isLoading}
+                isLoading={loading}
                 loadingText="Registering..."
                 type="submit"
                 bg="twitter.500"

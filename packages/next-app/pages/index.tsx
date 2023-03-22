@@ -44,7 +44,9 @@ const Home: NextPage = () => {
         <h1 className={styles.title}>
           zkTender
         </h1>
-        <br/>
+        <p className="text-white text-2xl mt-5 mb-10">
+          Zero-Knowledge Proof based Tenders
+        </p>
         {
           hydrated &&
           <Fragment>

@@ -4,6 +4,16 @@ import {
     ChangeEvent,
     FormEventHandler
 } from "react";
+import { 
+    ethers, 
+    Signer,
+    Contract
+} from 'ethers';
+import { 
+    useSigner, 
+    useAccount,
+    useContractRead
+} from 'wagmi';
 import {
     Input,
     Button,
@@ -11,26 +21,15 @@ import {
     Textarea,
     FormLabel
 } from "@chakra-ui/react";
-import { 
-    ethers, 
-    Contract, 
-    Signer
-} from 'ethers';
-import { 
-    useSigner, 
-    useAccount,
-    useContractRead
-} from 'wagmi';
 import { useRouter } from "next/router";
-import { Web3Storage } from 'web3.storage';
 import DatePicker from 'react-datepicker'; 
+import "react-datepicker/dist/react-datepicker.css";
+import { Web3Storage } from 'web3.storage';
 import DefaultLayout from "../layouts/DefaultLayout";
 import TenderManager from "../abis/TenderManager.json";
 import { TenderManagerAddress } from "../../hardhat/contractAddress";
 
 const Create = () => {
-    const toast = useToast();
-    const router = useRouter();
     const [loading, setLoading] = useState<boolean>(false);
     const [contract, setContract] = useState<Contract>();
     const [title, setTitle] = useState<string>("");
@@ -38,6 +37,8 @@ const Create = () => {
     const [documentURL, setDocumentURL] = useState<string>("");
     const [biddingDeadline, setBiddingDeadline] = useState<Date>(new Date());
 
+    const toast = useToast();
+    const router = useRouter();
     const { data: signer } = useSigner();
     const { address, isConnected } = useAccount();
     const { data: username, isError: err1 } = useContractRead({
@@ -106,6 +107,7 @@ const Create = () => {
                 duration: 3000,
                 isClosable: true
             });
+            router?.push("/");
         } catch (e) {
             toast({
                 title: "Error: Transaction failed",

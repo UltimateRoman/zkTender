@@ -4,6 +4,8 @@ const snarkjs = require('snarkjs');
 const app = express();
 app.use(cors());
 
+console.log("API endpoint is ready");
+
 app.get('/generate', async function (req, res) {
     try {
         const inputs = JSON.parse(req?.query?.inputs);

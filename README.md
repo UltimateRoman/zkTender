@@ -35,7 +35,7 @@ $ npm run version:fix
 
 #### Add .env file
 
-Create a .env file in /packages/hardhat directory based on (https://github.com/UltimateRoman/zkTender/blob/main/packages/hardhat/.env.example)
+Create a .env file in /packages/hardhat directory based on [.env.example](https://github.com/UltimateRoman/zkTender/blob/main/packages/hardhat/.env.example)
 
 ### Deploy contracts
 
@@ -59,7 +59,7 @@ $ npm run start:api
 
 #### Add .env.local file
 
-Create a .env.local file in /packages/next-app directory based on (https://github.com/UltimateRoman/zkTender/blob/main/packages/next-app/.env.local.example)
+Create a .env.local file in /packages/next-app directory based on [.env.local.example](https://github.com/UltimateRoman/zkTender/blob/main/packages/next-app/.env.local.example)
 
 ### Run the frontend application
 
